@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -24,11 +20,6 @@ namespace CustomStatus
         {
             InitializeComponent();
             richTextBox1.BackColor = textBox1.BackColor;
-        }
-
-        private void ProxyGrabber_Load(object sender, EventArgs e)
-        {
-
         }
 
         public static bool TestProxy(string prx)

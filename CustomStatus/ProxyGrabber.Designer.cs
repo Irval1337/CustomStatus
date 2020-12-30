@@ -107,7 +107,6 @@
             this.MinimumSize = new System.Drawing.Size(279, 433);
             this.Name = "ProxyGrabber";
             this.Text = "ProxyGrabber";
-            this.Load += new System.EventHandler(this.ProxyGrabber_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

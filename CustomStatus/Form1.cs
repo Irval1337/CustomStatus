@@ -358,7 +358,7 @@ namespace CustomStatus
         {
             StartPosition:
             var serviceCollection = new ServiceCollection();
-            if (settings.UseProxy == 1 || settings.UseProxy == 2 && settings.Proxies.Count > 0)
+            if ((settings.UseProxy == 1 || settings.UseProxy == 2) && settings.Proxies.Count > 0)
                 serviceCollection.AddSingleton<IWebProxy>(new WebProxy(settings.Proxies[0]));
             var api = new VkApi(serviceCollection);
             try
@@ -403,17 +403,19 @@ namespace CustomStatus
                     status = status.Replace("%mN", now.Minute.ToString());
                     status = status.Replace("%sN", now.Second.ToString());
 
-                    status = status.Replace("%yT", Dict.Years((int)(delta.TotalDays/365)));
-                    status = status.Replace("%dT", Dict.Days((int)delta.TotalDays%365));
-                    status = status.Replace("%hT", Dict.Hours((int)delta.TotalHours%24));
-                    status = status.Replace("%mT", Dict.Minutes((int)delta.TotalMinutes%60));
-                    status = status.Replace("%sT", Dict.Seconds((int)delta.TotalSeconds%60));
+                    status = status.Replace("%yT", (int)delta.TotalDays / 365 > 0 ? Dict.Years((int)(delta.TotalDays/365)) : "");
+                    status = status.Replace("%dT", (int)delta.TotalDays % 365 > 0 ? Dict.Days((int)delta.TotalDays%365) : "");
+                    status = status.Replace("%hT", (int)delta.TotalHours % 24 > 0 ? Dict.Hours((int)delta.TotalHours%24) : "");
+                    status = status.Replace("%mT", (int)delta.TotalMinutes % 60 > 0 ? Dict.Minutes((int)delta.TotalMinutes%60) : "");
+                    status = status.Replace("%sT", (int)delta.TotalSeconds % 60 > 0 ? Dict.Seconds((int)delta.TotalSeconds%60) : "");
 
-                    status = status.Replace("%yT", ((int)(delta.TotalDays/365)).ToString());
-                    status = status.Replace("%dT", ((int)delta.TotalDays).ToString());
-                    status = status.Replace("%hT", ((int)delta.TotalHours).ToString());
-                    status = status.Replace("%mT", ((int)delta.TotalMinutes).ToString());
-                    status = status.Replace("%sT", ((int)delta.TotalSeconds).ToString());
+                    status = status.Replace("%yT", (int)delta.TotalDays / 365 > 0 ? ((int)(delta.TotalDays/365)).ToString() : "");
+                    status = status.Replace("%dT", (int)delta.TotalDays % 365 > 0 ? ((int)delta.TotalDays % 365).ToString() : "");
+                    status = status.Replace("%hT", (int)delta.TotalHours % 24 > 0 ? ((int)delta.TotalHours % 24).ToString() : "");
+                    status = status.Replace("%mT", (int)delta.TotalMinutes % 60 > 0 ? ((int)delta.TotalMinutes % 60).ToString() : "");
+                    status = status.Replace("%sT", (int)delta.TotalSeconds % 60 > 0 ? ((int)delta.TotalSeconds % 60).ToString() : "");
+
+                    status = status.Replace("  ", " ");
 
                     if (api.Status.Get(userId).Text != status)
                     {
