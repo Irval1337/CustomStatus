@@ -33,12 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Bunifu.Core">
-      <HintPath>..\..\DataStock\DataStock\bin\Release\Bunifu.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="Bunifu_UI_v1.5.3">
-      <HintPath>..\..\DataStock\DataStock\bin\Release\Bunifu_UI_v1.5.3.dll</HintPath>
-    </Reference>
     <Reference Include="Discord.Net.Commands, Version=2.2.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Discord.Net.Commands.2.2.0\lib\net461\Discord.Net.Commands.dll</HintPath>
     </Reference>
@@ -112,7 +106,7 @@
       <HintPath>..\packages\VkNet.1.58.0\lib\net461\VkNet.dll</HintPath>
     </Reference>
     <Reference Include="xNet">
-      <HintPath>..\..\..\..\Downloads\xNet.dll</HintPath>
+      <HintPath>..\..\..\..\OneDrive\Документы\xNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -260,6 +260,12 @@ namespace CustomStatus
                     AddLog("Не удалось запустить бота: " + ex.Message);
                 }
             }
+            else
+            {
+                label10.Text = "Отключено";
+                label10.ForeColor = Color.Red;
+                button10.Text = "Запустить бота";
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -457,6 +463,7 @@ namespace CustomStatus
                 {
                     try
                     {
+                        vkapi = new VkApi();
                         vkapi.Authorize(new VkNet.Model.ApiAuthParams() { AccessToken = Properties.Settings.Default.VkToken, UserId = Properties.Settings.Default.VkUserId, ApplicationId = 2685278 });
                         vkapi.Utils.ResolveScreenName("durov");
                         label10.Text = "В работе";
