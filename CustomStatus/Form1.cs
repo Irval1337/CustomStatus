@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
+using DiscordRPC;
 
 namespace CustomStatus
 {
@@ -40,7 +41,8 @@ namespace CustomStatus
 
         VkApi vkapi = new VkApi();
 
-        static bool stopStatus = false;
+        static bool stopStatusVK = false;
+        static bool stopStatusDS = false;
 
         public Form1()
         {
@@ -141,12 +143,20 @@ namespace CustomStatus
         {
             if (tabControl1.SelectedIndex == 1)
             {
+                button10.Text = "Запустить бота";
+                stopStatusVK = stopStatusDS = true;
                 if (!String.IsNullOrEmpty(Properties.Settings.Default.VkToken) && Properties.Settings.Default.VkUserId != 0)
                 {
                     button5.Text = "Изменить";
                     textBox3.Enabled = textBox9.Enabled = false;
                     textBox3.Text = Properties.Settings.Default.VkToken;
                     textBox9.Text = Properties.Settings.Default.VkUserId.ToString();
+                }
+                if (Properties.Settings.Default.UseDSRP)
+                {
+                    button6.Text = "Изменить";
+                    checkBox2.Enabled = false;
+                    checkBox2.Checked = Properties.Settings.Default.UseDSRP;
                 }
             }
         }
@@ -239,7 +249,7 @@ namespace CustomStatus
 
             settings = JsonConvert.DeserializeObject<DataSettings>(File.ReadAllText(appData + @"\CustomStatus\Settings.json"));
 
-            if (!String.IsNullOrEmpty(Properties.Settings.Default.VkToken) && Properties.Settings.Default.VkUserId != 0) //vk.com
+            if (!String.IsNullOrEmpty(Properties.Settings.Default.VkToken) && Properties.Settings.Default.VkUserId != 0)
             {
                 try
                 {
@@ -247,8 +257,7 @@ namespace CustomStatus
                     vkapi.Utils.ResolveScreenName("durov");
                     label10.Text = "В работе";
                     label10.ForeColor = Color.Green;
-                    button10.Text = "Остановить бота";
-                    AddLog("Бот успешно запущен!");
+                    AddLog("[ВКонтакте] Бот успешно запущен!");
 
                     Task.Factory.StartNew(() => { VkStatus(); });
                 }
@@ -256,16 +265,65 @@ namespace CustomStatus
                 {
                     label10.Text = "Отключено";
                     label10.ForeColor = Color.Red;
-                    button10.Text = "Запустить бота";
-                    AddLog("Не удалось запустить бота: " + ex.Message);
+                    AddLog("[ВКонтакте] Не удалось запустить бота: " + ex.Message);
                 }
             }
             else
             {
                 label10.Text = "Отключено";
                 label10.ForeColor = Color.Red;
-                button10.Text = "Запустить бота";
             }
+            if (Properties.Settings.Default.UseDSRP)
+            {
+                try
+                {
+                    DiscordRpcClient client = new DiscordRpcClient("796786581708079115");
+                    client.OnReady += (se, evu) =>
+                    {
+                        AddLog("Получено событие Ready от пользователя " + evu.User.Username);
+                    };
+
+                    client.OnPresenceUpdate += (se, evu) =>
+                    {
+                        AddLog("[Discord] Детали игровой активности изменены: " + evu.Presence.Details);
+                    };
+
+                    client.Initialize();
+
+                    client.SetPresence(new RichPresence()
+                    {
+                        Details = "Idling",
+                        Assets = new Assets()
+                        {
+                            LargeImageKey = "logo",
+                            LargeImageText = "CustomStatus by Irval",
+                        }
+                    });
+                    Task.Factory.StartNew(() => {
+                        DSStatus(client);
+                        client.Dispose();
+                    });
+                    AddLog("[Discord] Бот успешно запущен!");
+                    
+                    label11.Text = "В работе";
+                    label11.ForeColor = Color.Green;
+                }
+                catch (Exception ex)
+                {
+                    label11.Text = "Отключено";
+                    label11.ForeColor = Color.Red;
+                    AddLog("[Discord] Не удалось запустить бота: " + ex.Message);
+                }
+            }
+            else
+            {
+                label11.Text = "Отключено";
+                label11.ForeColor = Color.Red;
+            }
+            if (label10.ForeColor == Color.Green || label11.ForeColor == Color.Green)
+                button10.Text = "Остановить бота";
+            else
+                button10.Text = "Запустить бота";
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -337,6 +395,40 @@ namespace CustomStatus
             }
         }
 
+        string getStatus(DateItem date)
+        {
+            string status = date.FormatText;
+            DateTime now = DateTime.Now;
+            var delta = date.Date - now;
+
+            status = status.Replace("%yD", date.Date.Year.ToString());
+            status = status.Replace("%dD", date.Date.Day.ToString());
+            status = status.Replace("%hD", date.Date.Hour.ToString());
+            status = status.Replace("%mD", date.Date.Minute.ToString());
+            status = status.Replace("%sD", date.Date.Second.ToString());
+
+            status = status.Replace("%yN", now.Year.ToString());
+            status = status.Replace("%dN", now.Day.ToString());
+            status = status.Replace("%hN", now.Hour.ToString());
+            status = status.Replace("%mN", now.Minute.ToString());
+            status = status.Replace("%sN", now.Second.ToString());
+
+            status = status.Replace("%yT", (int)delta.TotalDays / 365 > 0 ? Dict.Years((int)(delta.TotalDays / 365)) : "");
+            status = status.Replace("%dT", (int)delta.TotalDays % 365 > 0 ? Dict.Days((int)delta.TotalDays % 365) : "");
+            status = status.Replace("%hT", (int)delta.TotalHours % 24 > 0 ? Dict.Hours((int)delta.TotalHours % 24) : "");
+            status = status.Replace("%mT", (int)delta.TotalMinutes % 60 > 0 ? Dict.Minutes((int)delta.TotalMinutes % 60) : "");
+            status = status.Replace("%sT", (int)delta.TotalSeconds % 60 > 0 ? Dict.Seconds((int)delta.TotalSeconds % 60) : "");
+
+            status = status.Replace("%yT", (int)delta.TotalDays / 365 > 0 ? ((int)(delta.TotalDays / 365)).ToString() : "");
+            status = status.Replace("%dT", (int)delta.TotalDays % 365 > 0 ? ((int)delta.TotalDays % 365).ToString() : "");
+            status = status.Replace("%hT", (int)delta.TotalHours % 24 > 0 ? ((int)delta.TotalHours % 24).ToString() : "");
+            status = status.Replace("%mT", (int)delta.TotalMinutes % 60 > 0 ? ((int)delta.TotalMinutes % 60).ToString() : "");
+            status = status.Replace("%sT", (int)delta.TotalSeconds % 60 > 0 ? ((int)delta.TotalSeconds % 60).ToString() : "");
+
+            status.Replace("  ", " ");
+            return status;
+        }
+
         private void grabberToolStripMenuItem_Click(object sender, EventArgs e)
         {
             GetVisible();
@@ -347,11 +439,6 @@ namespace CustomStatus
         {
             GetVisible();
             new ProxySettings().ShowDialog();
-        }
-
-        private void toolStripMenuItem4_Click(object sender, EventArgs e)
-        {
-
         }
 
         public void VkStatus()
@@ -367,60 +454,40 @@ namespace CustomStatus
                 long userId = Properties.Settings.Default.VkUserId;
                 api.Authorize(new VkNet.Model.ApiAuthParams() { AccessToken = token, UserId = userId, ApplicationId = 2685278 });
                 api.Utils.ResolveScreenName("durov");
-                while (!needClose && !stopStatus)
+                while (!needClose && !stopStatusVK)
                 {
-                    if (settings.Dates.Count == 0)
-                        break;
-                    var date = settings.Dates[0];
-                    if (date.Date < DateTime.Now) {
-                        if ((DateTime.Now - date.Date).TotalDays > 0)
+                    try
+                    {
+                        if (settings.Dates.Count == 0)
+                            break;
+                        var date = settings.Dates[0];
+                        if (date.Date < DateTime.Now)
                         {
-                            settings.Dates.RemoveAt(0);
-                            if (date.Repeat)
-                                settings.Dates.Add(date);
-                            date = settings.Dates[0];
+                            if ((DateTime.Now - date.Date).TotalDays > 0)
+                            {
+                                settings.Dates.RemoveAt(0);
+                                if (date.Repeat)
+                                    settings.Dates.Add(date);
+                                date = settings.Dates[0];
+                            }
+                            else if (api.Status.Get(userId).Text != "Сегодня " + date.Name + "!")
+                            {
+                                api.Status.Set("Сегодня " + date.Name + "!");
+                                AddLog($"[ВКонтакте] Статус изменен на поздравление с праздником \"{date.Name}\"");
+                            }
                         }
-                        else if (api.Status.Get(userId).Text != "Сегодня " + date.Name + "!")
+
+                        string status = getStatus(date);
+
+                        if (api.Status.Get(userId).Text != status)
                         {
-                            api.Status.Set("Сегодня " + date.Name + "!");
-                            AddLog($"Статус изменен на поздравление с праздником \"{date.Name}\"");
+                            api.Status.Set(status);
+                            AddLog("[ВКонтакте] Установлен новый статус пользователя: \"" + status + "\"");
                         }
                     }
-
-                    string status = date.FormatText;
-                    DateTime now = DateTime.Now;
-                    var delta = date.Date - now;
-
-                    status = status.Replace("%yD", date.Date.Year.ToString());
-                    status = status.Replace("%dD", date.Date.Day.ToString());
-                    status = status.Replace("%hD", date.Date.Hour.ToString());
-                    status = status.Replace("%mD", date.Date.Minute.ToString());
-                    status = status.Replace("%sD", date.Date.Second.ToString());
-
-                    status = status.Replace("%yN", now.Year.ToString());
-                    status = status.Replace("%dN", now.Day.ToString());
-                    status = status.Replace("%hN", now.Hour.ToString());
-                    status = status.Replace("%mN", now.Minute.ToString());
-                    status = status.Replace("%sN", now.Second.ToString());
-
-                    status = status.Replace("%yT", (int)delta.TotalDays / 365 > 0 ? Dict.Years((int)(delta.TotalDays/365)) : "");
-                    status = status.Replace("%dT", (int)delta.TotalDays % 365 > 0 ? Dict.Days((int)delta.TotalDays%365) : "");
-                    status = status.Replace("%hT", (int)delta.TotalHours % 24 > 0 ? Dict.Hours((int)delta.TotalHours%24) : "");
-                    status = status.Replace("%mT", (int)delta.TotalMinutes % 60 > 0 ? Dict.Minutes((int)delta.TotalMinutes%60) : "");
-                    status = status.Replace("%sT", (int)delta.TotalSeconds % 60 > 0 ? Dict.Seconds((int)delta.TotalSeconds%60) : "");
-
-                    status = status.Replace("%yT", (int)delta.TotalDays / 365 > 0 ? ((int)(delta.TotalDays/365)).ToString() : "");
-                    status = status.Replace("%dT", (int)delta.TotalDays % 365 > 0 ? ((int)delta.TotalDays % 365).ToString() : "");
-                    status = status.Replace("%hT", (int)delta.TotalHours % 24 > 0 ? ((int)delta.TotalHours % 24).ToString() : "");
-                    status = status.Replace("%mT", (int)delta.TotalMinutes % 60 > 0 ? ((int)delta.TotalMinutes % 60).ToString() : "");
-                    status = status.Replace("%sT", (int)delta.TotalSeconds % 60 > 0 ? ((int)delta.TotalSeconds % 60).ToString() : "");
-
-                    status = status.Replace("  ", " ");
-
-                    if (api.Status.Get(userId).Text != status)
+                    catch (Exception ex)
                     {
-                        api.Status.Set(status);
-                        AddLog("Установлен новый статус пользователя: \"" + status + "\"");
+                        AddLog("[ВКонтакте] Неизвестная ошибка: " + ex.Message);
                     }
                     Thread.Sleep(100);  
                 }
@@ -428,21 +495,67 @@ namespace CustomStatus
             }
             catch (HttpListenerException ex)
             {
-                AddLog("HttpListenerException: " + ex.Message);
+                AddLog("[ВКонтакте] HttpListenerException: " + ex.Message);
                 settings.Proxies.RemoveAt(0);
                 if (settings.Proxies.Count > 0)
                     goto StartPosition;
             }
             catch (Exception ex)
             {
-                AddLog("Неизвестная ошибка: " + ex.Message);
+                AddLog("[ВКонтакте] Неизвестная ошибка: " + ex.Message);
             }
-            this.Invoke(new MethodInvoker(() => { button10.Text = "Запустить бота";
+            this.Invoke(new MethodInvoker(() => {
                 label10.Text = "Отключено";
                 label10.ForeColor = Color.Red;
             }));
-            AddLog("Работа бота завершена!");
-            stopStatus = false;
+            AddLog("[ВКонтакте] Работа бота завершена!");
+            stopStatusVK = false;
+        }
+
+        void DSStatus (DiscordRpcClient client)
+        {
+            while (!needClose && !stopStatusDS)
+            {
+                try
+                {
+
+                    if (settings.Dates.Count == 0)
+                        break;
+                    var date = settings.Dates[0];
+                    if (date.Date < DateTime.Now)
+                    {
+                        if ((DateTime.Now - date.Date).TotalDays > 0)
+                        {
+                            settings.Dates.RemoveAt(0);
+                            if (date.Repeat)
+                                settings.Dates.Add(date);
+                            date = settings.Dates[0];
+                        }
+                        else if (client.CurrentPresence.Details != "Сегодня " + date.Name + "!")
+                        {
+                            client.UpdateDetails("Сегодня " + date.Name + "!");
+                            AddLog($"[Discord] Статус изменен на поздравление с праздником \"{date.Name}\"");
+                        }
+                    }
+
+                    string status = getStatus(date);
+
+                    if (client.CurrentPresence.Details != status)
+                        client.UpdateDetails(status);
+                    Thread.Sleep(100);
+
+                }
+                catch (Exception ex)
+                {
+                    AddLog("[Discord] Неизвестная ошибка: " + ex.Message);
+                }
+            }
+            this.Invoke(new MethodInvoker(() => {
+                label11.Text = "Отключено";
+                label11.ForeColor = Color.Red;
+            }));
+            AddLog("[Discord] Работа бота завершена!");
+            stopStatusDS = false;
         }
 
         void AddLog (string text)
@@ -452,12 +565,14 @@ namespace CustomStatus
 
         private void button10_Click(object sender, EventArgs e)
         {
+            stopStatusDS = stopStatusVK = false;
             if (button10.Text == "Остановить бота")
             {
-                stopStatus = true;
+                stopStatusVK = true;
+                stopStatusDS = true;
                 button10.Text = "Запустить бота";
-                label10.Text = "Отключено";
-                label10.ForeColor = Color.Red;
+                label10.Text = label11.Text = "Отключено";
+                label10.ForeColor = label11.ForeColor = Color.Red;
             }
             else
             {
@@ -470,8 +585,7 @@ namespace CustomStatus
                         vkapi.Utils.ResolveScreenName("durov");
                         label10.Text = "В работе";
                         label10.ForeColor = Color.Green;
-                        button10.Text = "Остановить бота";
-                        AddLog("Бот успешно запущен!");
+                        AddLog("[ВКонтакте] Бот успешно запущен!");
 
                         Task.Factory.StartNew(() => { VkStatus(); });
                     }
@@ -483,6 +597,50 @@ namespace CustomStatus
                         AddLog("Не удалось запустить бота: " + ex.Message);
                     }
                 }
+                if (Properties.Settings.Default.UseDSRP)
+                {
+                    try
+                    {
+                        Properties.Settings.Default.UseDSRP = checkBox2.Checked;
+                        Properties.Settings.Default.Save();
+                        checkBox2.Enabled = false;
+                        DiscordRpcClient client = new DiscordRpcClient("796786581708079115");
+                        client.OnReady += (se, evu) =>
+                        {
+                            AddLog("Получено событие Ready от пользователя " + evu.User.Username);
+                        };
+
+                        client.OnPresenceUpdate += (se, evu) =>
+                        {
+                            AddLog("[Discord] Детали игровой активности изменены: " + evu.Presence.Details);
+                        };
+
+                        client.Initialize();
+
+                        client.SetPresence(new RichPresence()
+                        {
+                            Details = "Idling",
+                            Assets = new Assets()
+                            {
+                                LargeImageKey = "logo",
+                                LargeImageText = "CustomStatus by Irval",
+                                SmallImageKey = "git"
+                            }
+                        });
+                        Task.Factory.StartNew(() => {
+                            DSStatus(client);
+                            client.Dispose();
+                        });
+                        label11.Text = "В работе";
+                        label11.ForeColor = Color.Green;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Во время инициализации Discord RP произошла ошибка: " + ex.Message);
+                    }
+                }
+                if (label10.ForeColor != Color.Red || label11.ForeColor != Color.Red)
+                    button10.Text = "Остановить бота";
             }
         }
 
@@ -494,6 +652,58 @@ namespace CustomStatus
         private void toolStripMenuItem6_Click(object sender, EventArgs e)
         {
             tabControl1.SelectedIndex = 0;
+        }
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            if (button6.Text == "Сохранить")
+            {
+                try
+                {
+                    Properties.Settings.Default.UseDSRP = checkBox2.Checked;
+                    Properties.Settings.Default.Save();
+                    checkBox2.Enabled = false;
+                    DiscordRpcClient client = new DiscordRpcClient("796786581708079115");
+                    client.OnReady += (se, evu) =>
+                    {
+                        AddLog("Получено событие Ready от пользователя " + evu.User.Username);
+                    };
+
+                    client.OnPresenceUpdate += (se, evu) =>
+                    {
+                        AddLog("[Discord] Детали игровой активности изменены: " + evu.Presence.Details);
+                    };
+
+                    client.Initialize();
+
+                    client.SetPresence(new RichPresence()
+                    {
+                        Details = "Idling", 
+                        Assets = new Assets()
+                        {
+                            LargeImageKey = "logo",
+                            LargeImageText = "CustomStatus by Irval",
+                            SmallImageKey = "git"
+                        }
+                    });
+                    Task.Factory.StartNew(() => {
+                        DSStatus(client);
+                        client.Dispose();
+                    });
+                    label11.Text = "В работе";
+                    label11.ForeColor = Color.Green;
+                    button6.Text = "Изменить";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Во время инициализации Discord RP произошла ошибка: " + ex.Message);
+                }
+            }
+            else
+            {
+                button6.Text = "Сохранить";
+                checkBox2.Enabled = true;
+            }
         }
     }
 }
