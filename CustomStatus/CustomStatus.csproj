@@ -70,12 +70,18 @@
       <HintPath>..\packages\VkNet.1.58.0\lib\net461\VkNet.dll</HintPath>
     </Reference>
     <Reference Include="xNet">
-      <HintPath>C:\Users\sasha\Downloads\xNet.dll</HintPath>
+      <HintPath>C:\Users\sasha\OneDrive\Документы\xNet.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DateSettings.cs" />
     <Compile Include="Dict.cs" />
+    <Compile Include="DiscordRPSettings.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DiscordRPSettings.Designer.cs">
+      <DependentUpon>DiscordRPSettings.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -108,6 +114,14 @@
     <Compile Include="ProxySettings.Designer.cs">
       <DependentUpon>ProxySettings.cs</DependentUpon>
     </Compile>
+    <Compile Include="Properties\Discord.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Discord.settings</DependentUpon>
+    </Compile>
+    <EmbeddedResource Include="DiscordRPSettings.resx">
+      <DependentUpon>DiscordRPSettings.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -142,6 +156,10 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <None Include="Properties\Discord.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Discord.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

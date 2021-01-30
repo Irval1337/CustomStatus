@@ -158,6 +158,13 @@ namespace CustomStatus
                     checkBox2.Enabled = false;
                     checkBox2.Checked = Properties.Settings.Default.UseDSRP;
                 }
+                button7.Text = "Изменить";
+                radioButton1.Checked = Properties.Settings.Default.DSRPmode == 0;
+                radioButton2.Checked = Properties.Settings.Default.DSRPmode == 1;
+                radioButton1.Enabled = radioButton2.Enabled = false;
+                textBox4.Enabled = false;
+                if (!String.IsNullOrEmpty(Properties.Settings.Default.DSRPkey))
+                    textBox4.Text = Properties.Settings.Default.DSRPkey;
             }
         }
         
@@ -232,7 +239,7 @@ namespace CustomStatus
                     checkBox1.Checked = false;
                 }
                 else
-                    MessageBox.Show("Ошибка заполнения полей!");
+                    MessageBox.Show("Ошибка заполнения полей!", "CustomStatus");
             }
         }
 
@@ -277,34 +284,7 @@ namespace CustomStatus
             {
                 try
                 {
-                    DiscordRpcClient client = new DiscordRpcClient("796786581708079115");
-                    client.OnReady += (se, evu) =>
-                    {
-                        AddLog("Получено событие Ready от пользователя " + evu.User.Username);
-                    };
-
-                    client.OnPresenceUpdate += (se, evu) =>
-                    {
-                        AddLog("[Discord] Детали игровой активности изменены: " + evu.Presence.Details);
-                    };
-
-                    client.Initialize();
-
-                    client.SetPresence(new RichPresence()
-                    {
-                        Details = "Idling",
-                        Assets = new Assets()
-                        {
-                            LargeImageKey = "logo",
-                            LargeImageText = "CustomStatus by Irval",
-                        }
-                    });
-                    Task.Factory.StartNew(() => {
-                        DSStatus(client);
-                        client.Dispose();
-                    });
-                    AddLog("[Discord] Бот успешно запущен!");
-                    
+                    StartDSActivity();
                     label11.Text = "В работе";
                     label11.ForeColor = Color.Green;
                 }
@@ -378,7 +358,7 @@ namespace CustomStatus
                     }
                     catch (VkNet.Exception.VkAuthorizationException)
                     {
-                        MessageBox.Show("Введеные данные неверны!");
+                        MessageBox.Show("Введеные данные неверны!", "CustomStatus");
                     }
                     catch (Exception ex)
                     {
@@ -386,7 +366,7 @@ namespace CustomStatus
                     }
                 }
                 else
-                    MessageBox.Show("Ошибка заполнения полей!");
+                    MessageBox.Show("Ошибка заполнения полей!", "CustomStatus");
             }
             else
             {
@@ -518,9 +498,12 @@ namespace CustomStatus
             {
                 try
                 {
-
-                    if (settings.Dates.Count == 0)
-                        break;
+                    if (settings.Dates.Count == 0) {
+                        if (client.CurrentPresence.Details != Properties.Discord.Default.Details)
+                            client.UpdateDetails(Properties.Discord.Default.Details);
+                        Thread.Sleep(100);
+                        continue;
+                    }
                     var date = settings.Dates[0];
                     if (date.Date < DateTime.Now)
                     {
@@ -528,7 +511,10 @@ namespace CustomStatus
                         {
                             settings.Dates.RemoveAt(0);
                             if (date.Repeat)
+                            {
+                                date.Date = date.Date.AddYears(1);
                                 settings.Dates.Add(date);
+                            }
                             date = settings.Dates[0];
                         }
                         else if (client.CurrentPresence.Details != "Сегодня " + date.Name + "!")
@@ -543,7 +529,6 @@ namespace CustomStatus
                     if (client.CurrentPresence.Details != status)
                         client.UpdateDetails(status);
                     Thread.Sleep(100);
-
                 }
                 catch (Exception ex)
                 {
@@ -601,42 +586,13 @@ namespace CustomStatus
                 {
                     try
                     {
-                        Properties.Settings.Default.UseDSRP = checkBox2.Checked;
-                        Properties.Settings.Default.Save();
-                        checkBox2.Enabled = false;
-                        DiscordRpcClient client = new DiscordRpcClient("796786581708079115");
-                        client.OnReady += (se, evu) =>
-                        {
-                            AddLog("Получено событие Ready от пользователя " + evu.User.Username);
-                        };
-
-                        client.OnPresenceUpdate += (se, evu) =>
-                        {
-                            AddLog("[Discord] Детали игровой активности изменены: " + evu.Presence.Details);
-                        };
-
-                        client.Initialize();
-
-                        client.SetPresence(new RichPresence()
-                        {
-                            Details = "Idling",
-                            Assets = new Assets()
-                            {
-                                LargeImageKey = "logo",
-                                LargeImageText = "CustomStatus by Irval",
-                                SmallImageKey = "git"
-                            }
-                        });
-                        Task.Factory.StartNew(() => {
-                            DSStatus(client);
-                            client.Dispose();
-                        });
+                        StartDSActivity();
                         label11.Text = "В работе";
                         label11.ForeColor = Color.Green;
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Во время инициализации Discord RP произошла ошибка: " + ex.Message);
+                        MessageBox.Show("Во время инициализации Discord RP произошла ошибка: " + ex.Message, "CustomStatus");
                     }
                 }
                 if (label10.ForeColor != Color.Red || label11.ForeColor != Color.Red)
@@ -654,56 +610,142 @@ namespace CustomStatus
             tabControl1.SelectedIndex = 0;
         }
 
+        void StartDSActivity()
+        {
+            DiscordRpcClient client = new DiscordRpcClient(!String.IsNullOrEmpty(Properties.Settings.Default.DSRPkey) ? Properties.Settings.Default.DSRPkey
+                        : "796786581708079115");
+            client.OnReady += (se, evu) =>
+            {
+                AddLog("[Discord] Получено событие Ready от пользователя " + evu.User.Username);
+            };
+
+            client.OnPresenceUpdate += (se, evu) =>
+            {
+                AddLog("[Discord] Детали игровой активности изменены: \"" + evu.Presence.Details + "\"");
+            };
+
+            if (!client.Initialize())
+                throw new Exception("Неверный ClientID приложения");
+
+            if (Properties.Settings.Default.DSRPmode == 0)
+            {
+                client.SetPresence(new RichPresence()
+                {
+                    Details = "Idling",
+                    Assets = new Assets()
+                    {
+                        LargeImageKey = "logo",
+                        LargeImageText = "CustomStatus",
+                    }
+                });
+            }
+            else
+            {
+                client.SetPresence(new RichPresence()
+                {
+                    Details = !String.IsNullOrEmpty(Properties.Discord.Default.Details) ? Properties.Discord.Default.Details : null,
+                    State = !String.IsNullOrEmpty(Properties.Discord.Default.State) ? Properties.Discord.Default.State : null,
+                    Assets = new Assets()
+                    {
+                        LargeImageKey = !String.IsNullOrEmpty(Properties.Discord.Default.LargeImg) ? Properties.Discord.Default.LargeImg : null,
+                        LargeImageText = !String.IsNullOrEmpty(Properties.Discord.Default.LargeText) ? Properties.Discord.Default.LargeText : null,
+                        SmallImageKey = !String.IsNullOrEmpty(Properties.Discord.Default.SmallImg) ? Properties.Discord.Default.SmallImg : null,
+                        SmallImageText = !String.IsNullOrEmpty(Properties.Discord.Default.SmallText) ? Properties.Discord.Default.SmallText : null,
+                    },
+                    Timestamps = new Timestamps()
+                    {
+                        StartUnixMilliseconds = Properties.Discord.Default.UseTimer ? (ulong?)(DateTime.Now.ToUniversalTime()
+                        - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds : null
+                    }
+                });
+            }
+            Task.Factory.StartNew(() => {
+                DSStatus(client);
+                client.Dispose();
+            });
+            AddLog("[Discord] Бот успешно запущен!");
+        }
+
         private void button6_Click(object sender, EventArgs e)
         {
             if (button6.Text == "Сохранить")
             {
-                try
-                {
-                    Properties.Settings.Default.UseDSRP = checkBox2.Checked;
-                    Properties.Settings.Default.Save();
-                    checkBox2.Enabled = false;
-                    DiscordRpcClient client = new DiscordRpcClient("796786581708079115");
-                    client.OnReady += (se, evu) =>
-                    {
-                        AddLog("Получено событие Ready от пользователя " + evu.User.Username);
-                    };
-
-                    client.OnPresenceUpdate += (se, evu) =>
-                    {
-                        AddLog("[Discord] Детали игровой активности изменены: " + evu.Presence.Details);
-                    };
-
-                    client.Initialize();
-
-                    client.SetPresence(new RichPresence()
-                    {
-                        Details = "Idling", 
-                        Assets = new Assets()
-                        {
-                            LargeImageKey = "logo",
-                            LargeImageText = "CustomStatus by Irval",
-                            SmallImageKey = "git"
-                        }
-                    });
-                    Task.Factory.StartNew(() => {
-                        DSStatus(client);
-                        client.Dispose();
-                    });
-                    label11.Text = "В работе";
-                    label11.ForeColor = Color.Green;
-                    button6.Text = "Изменить";
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Во время инициализации Discord RP произошла ошибка: " + ex.Message);
-                }
+                Properties.Settings.Default.UseDSRP = checkBox2.Checked;
+                Properties.Settings.Default.Save();
+                checkBox2.Enabled = false;
+                button6.Text = "Изменить";
             }
             else
             {
                 button6.Text = "Сохранить";
                 checkBox2.Enabled = true;
             }
+        }
+
+        private void button7_Click(object sender, EventArgs e)
+        {
+            if (button7.Text == "Сохранить")
+            {
+                if (!String.IsNullOrEmpty(textBox4.Text) && radioButton2.Checked)
+                {
+                    try
+                    {
+                        using (DiscordRpcClient client = new DiscordRpcClient(textBox4.Text))
+                        {
+                            if (!client.Initialize())
+                                throw new Exception("Неверный ClientID приложения");
+
+                            Properties.Settings.Default.DSRPkey = textBox4.Text;
+                            Properties.Settings.Default.DSRPmode = 1;
+                            Properties.Settings.Default.Save();
+
+                            button7.Text = "Изменить";
+                            textBox4.Enabled = false;
+                            radioButton1.Enabled = radioButton2.Enabled = false;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Во время авторизации произошла ошибка: " + ex.Message, "CustomStatus");
+                    }
+                }
+                else if (radioButton1.Checked)
+                {
+                    Properties.Settings.Default.DSRPmode = 0;
+                    Properties.Settings.Default.Save();
+                    button7.Text = "Изменить";
+                    textBox4.Enabled = false;
+                    radioButton1.Enabled = radioButton2.Enabled = false;
+                }
+                else
+                    MessageBox.Show("Ошибка заполнения полей!", "CustomStatus");
+            }
+            else
+            {
+                button7.Text = "Сохранить";
+                radioButton1.Enabled = radioButton2.Enabled = true;
+                textBox4.Enabled = radioButton2.Checked && !radioButton1.Checked;
+            }
+        }
+
+        private void radioButton1_CheckedChanged(object sender, EventArgs e)
+        {
+            textBox4.Enabled = radioButton2.Checked && !radioButton1.Checked;
+        }
+
+        private void button11_Click(object sender, EventArgs e)
+        {
+            new DiscordRPSettings().ShowDialog();
+        }
+
+        private void toolStripMenuItem4_Click(object sender, EventArgs e)
+        {
+            grabberToolStripMenuItem_Click(sender, e);
+        }
+
+        private void toolStripMenuItem5_Click(object sender, EventArgs e)
+        {
+            спискиToolStripMenuItem_Click(sender, e);
         }
     }
 }

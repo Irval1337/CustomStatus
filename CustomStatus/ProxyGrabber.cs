@@ -76,7 +76,7 @@ namespace CustomStatus
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Во время парсинга возникла ошибка: " + ex.Message);
+                    MessageBox.Show("Во время парсинга возникла ошибка: " + ex.Message, "CustomStatus");
                 }
             }
             else
@@ -153,7 +153,7 @@ namespace CustomStatus
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Во время проверки возникла ошибка: " + ex.Message);
+                        MessageBox.Show("Во время проверки возникла ошибка: " + ex.Message, "CustomStatus");
                     }
                 });
             }

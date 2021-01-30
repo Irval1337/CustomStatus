@@ -13,11 +13,11 @@ namespace CustomStatus.Properties {
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.6.0.0")]
-    internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
+    internal sealed partial class Discord : global::System.Configuration.ApplicationSettingsBase {
         
-        private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
+        private static Discord defaultInstance = ((Discord)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Discord())));
         
-        public static Settings Default {
+        public static Discord Default {
             get {
                 return defaultInstance;
             }
@@ -26,72 +26,84 @@ namespace CustomStatus.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string VkToken {
+        public string State {
             get {
-                return ((string)(this["VkToken"]));
+                return ((string)(this["State"]));
             }
             set {
-                this["VkToken"] = value;
+                this["State"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public long VkUserId {
+        [global::System.Configuration.DefaultSettingValueAttribute("Idling")]
+        public string Details {
             get {
-                return ((long)(this["VkUserId"]));
+                return ((string)(this["Details"]));
             }
             set {
-                this["VkUserId"] = value;
+                this["Details"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string RuCaptcha {
+        public string LargeImg {
             get {
-                return ((string)(this["RuCaptcha"]));
+                return ((string)(this["LargeImg"]));
             }
             set {
-                this["RuCaptcha"] = value;
+                this["LargeImg"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SmallImg {
+            get {
+                return ((string)(this["SmallImg"]));
+            }
+            set {
+                this["SmallImg"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LargeText {
+            get {
+                return ((string)(this["LargeText"]));
+            }
+            set {
+                this["LargeText"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string SmallText {
+            get {
+                return ((string)(this["SmallText"]));
+            }
+            set {
+                this["SmallText"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
-        public bool UseDSRP {
+        public bool UseTimer {
             get {
-                return ((bool)(this["UseDSRP"]));
+                return ((bool)(this["UseTimer"]));
             }
             set {
-                this["UseDSRP"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0")]
-        public int DSRPmode {
-            get {
-                return ((int)(this["DSRPmode"]));
-            }
-            set {
-                this["DSRPmode"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string DSRPkey {
-            get {
-                return ((string)(this["DSRPkey"]));
-            }
-            set {
-                this["DSRPkey"] = value;
+                this["UseTimer"] = value;
             }
         }
     }

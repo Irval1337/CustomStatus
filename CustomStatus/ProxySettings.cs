@@ -53,6 +53,7 @@ namespace CustomStatus
                 : richTextBox1.Lines.ToList();
             File.WriteAllText(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) 
                 + @"\CustomStatus\Settings.json", JsonConvert.SerializeObject(settings));
+            MessageBox.Show("Наастройки прокси сервера успешно сохранены", "CustomStatus");
         }
     }
 }
