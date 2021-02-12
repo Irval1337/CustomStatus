@@ -11,6 +11,8 @@ using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using System.Threading;
 using DiscordRPC;
+using Ionic.Zip;
+using System.ComponentModel;
 
 namespace CustomStatus
 {
@@ -43,6 +45,9 @@ namespace CustomStatus
 
         static bool stopStatusVK = false;
         static bool stopStatusDS = false;
+
+        bool isFirstRPC = true;
+        Process winServer = null;
 
         public Form1()
         {
@@ -95,6 +100,9 @@ namespace CustomStatus
                 HideFromAltTab(this.Handle);
                 e.Cancel = true;
             }
+            else
+                if (Properties.YGRPC.Default.ClientStartMode == 1 && winServer != null && !winServer.HasExited) winServer.Kill();
+
         }
 
         private void выходToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -165,6 +173,15 @@ namespace CustomStatus
                 textBox4.Enabled = false;
                 if (!String.IsNullOrEmpty(Properties.Settings.Default.DSRPkey))
                     textBox4.Text = Properties.Settings.Default.DSRPkey;
+            }
+            else if (tabControl1.SelectedIndex == 3)
+            {
+                isFirstRPC = true;
+                checkBox3.Checked = Properties.YGRPC.Default.UseRPC;
+                radioButton3.Checked = Properties.YGRPC.Default.ClientStartMode == 0;
+                radioButton4.Checked = Properties.YGRPC.Default.ClientStartMode == 1;
+                radioButton5.Checked = Properties.YGRPC.Default.ClientStartMode == 2;
+                isFirstRPC = false;
             }
         }
         
@@ -304,6 +321,21 @@ namespace CustomStatus
                 button10.Text = "Остановить бота";
             else
                 button10.Text = "Запустить бота";
+            if (Properties.YGRPC.Default.UseRPC && Properties.YGRPC.Default.ClientStartMode == 1) {
+                if (!Directory.Exists("Discord-RPC-Extension") || !File.Exists(@"Discord-RPC-Extension\server_win.exe"))
+                {
+                    MessageBox.Show("Файл server_win.exe не найден", "CustomStatus");
+                    Properties.YGRPC.Default.ClientStartMode = 2;
+                    Properties.YGRPC.Default.Save();
+                }
+                else
+                {
+                    ProcessStartInfo procInfo = new ProcessStartInfo();
+                    procInfo.FileName = @"Discord-RPC-Extension\server_win.exe";
+                    winServer = new Process { StartInfo = procInfo };
+                    winServer.Start();
+                }
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -746,6 +778,144 @@ namespace CustomStatus
         private void toolStripMenuItem5_Click(object sender, EventArgs e)
         {
             спискиToolStripMenuItem_Click(sender, e);
+        }
+
+        private void youGameRPCToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            GetVisible();
+            tabControl1.SelectedIndex = 3;
+        }
+
+        private void youGameDiscordRPCToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            youGameRPCToolStripMenuItem_Click(sender, e);
+        }
+
+        private void button12_Click(object sender, EventArgs e)
+        {
+            Process.Start("https://chrome.google.com/webstore/detail/discord-rich-presence/agnaejlkbiiggajjmnpmeheigkflbnoo");
+        }
+
+        private void button13_Click(object sender, EventArgs e)
+        {
+            Process.Start("https://www.dropbox.com/s/lfwxbuf7rw8yrns/YouGame%20Discord%20RPC.zip?dl=0");
+        }
+
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("https://github.com/lolamtisch/Discord-RPC-Extension");
+        }
+
+        private void button14_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                string link = @"https://www.dropbox.com/s/b7rh3z9ake3zefp/windows_64bit.zip?dl=1";
+                string path = Environment.CurrentDirectory;
+                Directory.CreateDirectory(path + @"\Discord-RPC-Extension");
+                WebClient webClient = new WebClient();
+                webClient.DownloadFileCompleted += ((object se, AsyncCompletedEventArgs ev) => {
+                    using (Ionic.Zip.ZipFile zip = Ionic.Zip.ZipFile.Read(path + @"\Discord-RPC-Extension\Extension.zip"))
+                    {
+                        foreach (ZipEntry evu in zip)
+                        {
+                            evu.Extract(path + @"\Discord-RPC-Extension", ExtractExistingFileAction.OverwriteSilently);
+                        }
+                        zip.Dispose();
+                    }
+                    File.Delete(path + @"\Discord-RPC-Extension\Extension.zip");
+                    MessageBox.Show("Установка успешно завершена!", "CustomStatus");
+                    if (Properties.YGRPC.Default.ClientStartMode == 0)
+                        Process.Start(path + @"\Discord-RPC-Extension\add_startup.bat");
+                    if (Properties.YGRPC.Default.ClientStartMode != 2)
+                    {
+                        ProcessStartInfo procInfo = new ProcessStartInfo();
+                        procInfo.FileName = path + @"\Discord-RPC-Extension\server_win.exe";
+                        winServer = new Process { StartInfo = procInfo };
+                        winServer.Start();
+                    }
+                });
+                webClient.DownloadFileAsync(new Uri(link), path + @"\Discord -RPC-Extension\Extension.zip");
+            }
+            catch (Exception ex) { MessageBox.Show("Ошибка во время установки: " + ex.Message, "CustomStatus"); }
+        }
+
+        private void radioButton3_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioButton3.Checked && !isFirstRPC)
+            {
+                if (!Directory.Exists("Discord-RPC-Extension") || !File.Exists(@"Discord-RPC-Extension\server_win.exe")
+                        || !File.Exists(@"Discord-RPC-Extension\add_startup.bat"))
+                    return;
+                Process.Start(@"Discord-RPC-Extension\add_startup.bat");
+                if ((winServer == null || winServer.HasExited) && Properties.YGRPC.Default.ClientStartMode != 1)
+                    Process.Start(@"Discord-RPC-Extension\server_win.exe");
+                Properties.YGRPC.Default.ClientStartMode = 0;
+                Properties.YGRPC.Default.Save();
+            }
+        }
+
+        private void radioButton4_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioButton4.Checked && !isFirstRPC)
+            {
+                if (Properties.YGRPC.Default.ClientStartMode == 0)
+                {
+                    if (!Directory.Exists("Discord-RPC-Extension") || !File.Exists(@"Discord-RPC-Extension\server_win.exe")
+                        || !File.Exists(@"Discord-RPC-Extension\remove_startup.bat"))
+                        return;
+                    Process.Start(@"Discord-RPC-Extension\remove_startup.bat");
+                }
+                if ((winServer == null || winServer.HasExited) && Properties.YGRPC.Default.ClientStartMode != 0)
+                    Process.Start(@"Discord-RPC-Extension\server_win.exe");
+                Properties.YGRPC.Default.ClientStartMode = 1;
+                Properties.YGRPC.Default.Save();
+            }
+        }
+
+        private void radioButton5_CheckedChanged(object sender, EventArgs e)
+        {
+            if (radioButton5.Checked && !isFirstRPC)
+            {
+                if (Properties.YGRPC.Default.ClientStartMode == 0)
+                {
+                    if (!Directory.Exists("Discord-RPC-Extension") || !File.Exists(@"Discord-RPC-Extension\server_win.exe")
+                        || !File.Exists(@"Discord-RPC-Extension\remove_startup.bat"))
+                        return;
+                    Process.Start(@"Discord-RPC-Extension\remove_startup.bat");
+                }
+                Properties.YGRPC.Default.ClientStartMode = 2;
+                Properties.YGRPC.Default.Save();
+            }
+        }
+
+        private void checkBox3_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!isFirstRPC)
+            {
+                Properties.YGRPC.Default.UseRPC = checkBox3.Checked;
+                Properties.YGRPC.Default.Save();
+
+                if (checkBox3.Checked)
+                {
+                    ProcessStartInfo procInfo = new ProcessStartInfo();
+                    procInfo.FileName = Environment.CurrentDirectory + @"\Discord-RPC-Extension\server_win.exe";
+                    winServer = new Process { StartInfo = procInfo };
+                    winServer.Start();
+                }
+                else
+                    if (winServer != null && !winServer.HasExited) winServer.Kill();
+            }
+        }
+
+        private void button15_Click(object sender, EventArgs e)
+        {
+            Process.Start("https://addons.mozilla.org/ru/firefox/addon/yougame-discord-rpc/");
+        }
+
+        private void button16_Click(object sender, EventArgs e)
+        {
+            Process.Start("https://addons.mozilla.org/ru/firefox/addon/discord-rich-presence/");
         }
     }
 }

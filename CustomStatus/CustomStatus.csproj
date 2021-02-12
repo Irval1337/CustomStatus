@@ -42,6 +42,9 @@
     <Reference Include="HtmlAgilityPack, Version=1.11.28.0, Culture=neutral, PublicKeyToken=bd319b19eaf3b43a, processorArchitecture=MSIL">
       <HintPath>..\packages\HtmlAgilityPack.1.11.28\lib\Net45\HtmlAgilityPack.dll</HintPath>
     </Reference>
+    <Reference Include="Ionic.Zip, Version=1.9.1.8, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+      <HintPath>..\packages\Ionic.Zip.1.9.1.8\lib\Ionic.Zip.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Extensions.DependencyInjection, Version=2.1.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Extensions.DependencyInjection.2.1.0\lib\net461\Microsoft.Extensions.DependencyInjection.dll</HintPath>
     </Reference>
@@ -102,6 +105,11 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\YGRPC.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>YGRPC.settings</DependentUpon>
+    </Compile>
     <Compile Include="ProxyGrabber.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -159,6 +167,10 @@
     <None Include="Properties\Discord.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Discord.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Properties\YGRPC.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>YGRPC.Designer.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>
