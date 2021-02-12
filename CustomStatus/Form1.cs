@@ -835,7 +835,7 @@ namespace CustomStatus
                         winServer.Start();
                     }
                 });
-                webClient.DownloadFileAsync(new Uri(link), path + @"\Discord -RPC-Extension\Extension.zip");
+                webClient.DownloadFileAsync(new Uri(link), path + @"\Discord-RPC-Extension\Extension.zip");
             }
             catch (Exception ex) { MessageBox.Show("Ошибка во время установки: " + ex.Message, "CustomStatus"); }
         }
