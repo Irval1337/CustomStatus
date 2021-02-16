@@ -798,7 +798,7 @@ namespace CustomStatus
 
         private void button13_Click(object sender, EventArgs e)
         {
-            Process.Start("https://www.dropbox.com/s/lfwxbuf7rw8yrns/YouGame%20Discord%20RPC.zip?dl=0");
+            Process.Start("https://chrome.google.com/webstore/detail/yougame-discord-rpc/kknolfoeplmjpoekmaphekhogjajgkcl");
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
